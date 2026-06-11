@@ -6226,64 +6226,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
         );
       }
       function x(e) {
-        try {
-          if (s === -1) {
-            let t = e.parentElement;
-            if (!t) return !1;
-            try {
-              return t.checkVisibility({
-                checkOpacity: !0,
-                checkVisibilityCSS: !0,
-              });
-            } catch {
-              let e = window.getComputedStyle(t);
-              return (
-                e.display !== `none` &&
-                e.visibility !== `hidden` &&
-                e.opacity !== `0`
-              );
-            }
-          }
-          let t = document.createRange();
-          t.selectNodeContents(e);
-          let n = t.getClientRects();
-          if (!n || n.length === 0) return !1;
-          let r = !1,
-            i = !1;
-          for (let e of n)
-            if (
-              e.width > 0 &&
-              e.height > 0 &&
-              ((r = !0),
-              !(
-                e.bottom < -s ||
-                e.top > window.innerHeight + s ||
-                e.right < -s ||
-                e.left > window.innerWidth + s
-              ))
-            ) {
-              i = !0;
-              break;
-            }
-          if (!r || !i) return !1;
-          let a = e.parentElement;
-          if (!a) return !1;
-          try {
-            return a.checkVisibility({
-              checkOpacity: !0,
-              checkVisibilityCSS: !0,
-            });
-          } catch {
-            let e = window.getComputedStyle(a);
-            return (
-              e.display !== `none` &&
-              e.visibility !== `hidden` &&
-              e.opacity !== `0`
-            );
-          }
-        } catch (e) {
-          return (console.warn(`Error checking text node visibility:`, e), !1);
-        }
+        return true;
       }
       function S(e) {
         if (!e || !e.tagName) return !1;
