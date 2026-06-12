@@ -6752,6 +6752,13 @@ Here are examples of good output patterns. Use them as reference but never copy 
             (e.type === `checkbox` || e.type === `radio`) &&
             (r.attributes.checked = e.checked ? `true` : `false`);
         }
+        if (e.tagName.toLowerCase() === 'img') {
+        let t = e.getAttributeNames?.() || [];
+        for (let n of t) {
+            let t = e.getAttribute(n);
+            r.attributes[n] = t;
+        }
+    }
         let i = !1;
         if (
           e.nodeType === Node.ELEMENT_NODE &&
@@ -6986,22 +6993,18 @@ Here are examples of good output patterns. Use them as reference but never copy 
         let o = t,
           s = `	`.repeat(t);
         if (e.type === `element`) {
-         if (e.tagName === 'img') {
-    // 直接通过 ref 获取真实的 DOM 元素
-    const realElement = e.ref;
-    if (realElement) {
-        const src = realElement.src;  // 获取完整的解析后的 URL
-        const alt = realElement.alt || '';
-        if (src && /\.(jpe?g|png|gif|webp|bmp|svg|ico|tiff?)$/i.test(src)) {
-            const attrs = [];
-            attrs.push(`src="${src}"`);
-            if (alt) attrs.push(`alt="${alt}"`);
-            const attrStr = attrs.join(' ');
-            r.push(`${s}<img ${attrStr} /> [图片链接: ${src}]`);
+           if (e.tagName === 'img') {
+            const src = e.attributes.src;
+            const alt = e.attributes.alt || '';
+            if (src && /\.(jpe?g|png|gif|webp|bmp|svg|ico|tiff?)$/i.test(src)) {
+                const attrs = [];
+                attrs.push(`src="${src}"`);
+                if (alt) attrs.push(`alt="${alt}"`);
+                const attrStr = attrs.join(' ');
+                r.push(`${s}<img ${attrStr} /> [图片链接: ${src}]`);
+            }
+            return; // 重要：输出后直接返回，不再执行后续元素处理
         }
-    }
-    return; // 输出后直接返回
-}
           let t = n && e.tagName && SEMANTIC_TAGS.has(e.tagName);
           if (e.highlightIndex !== void 0) {
             o += 1;
