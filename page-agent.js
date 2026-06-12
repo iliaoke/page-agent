@@ -7001,7 +7001,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
                 attrs.push(`src="${src}"`);
                 if (alt) attrs.push(`alt="${alt}"`);
                 const attrStr = attrs.join(' ');
-                r.push(`${s}<img ${attrStr} /> [图片链接: ${src}]`);
+                r.push(`${s}<img ${attrStr} />`);
             }
             return; // 重要：输出后直接返回，不再执行后续元素处理
         }
