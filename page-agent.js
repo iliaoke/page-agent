@@ -8966,23 +8966,4 @@ gl_Position = vec4(aPosition, 0.0, 1.0);
           window.pageAgent.config,
         ));
     });
-	window.z = {
-  string,
-  number,
-  boolean,
-  object,
-  array,
-  union,
-  intersection,
-  enum: _enum,
-  optional,
-  nullable,
-  default: _default,
-  catch: _catch,
-  pipe,
-  readonly,
-  transform,
-  refine,
-  superRefine,
-};
 })();
