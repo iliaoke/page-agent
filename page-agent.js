@@ -8966,5 +8966,4 @@ gl_Position = vec4(aPosition, 0.0, 1.0);
           window.pageAgent.config,
         ));
     });
-    window.z = z;
 })();
