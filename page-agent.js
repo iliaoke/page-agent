@@ -6994,17 +6994,18 @@ Here are examples of good output patterns. Use them as reference but never copy 
           s = `	`.repeat(t);
         if (e.type === `element`) {
            if (e.tagName === 'img') {
-            const src = e.attributes.src;
-            const alt = e.attributes.alt || '';
-            if (src && /\.(jpe?g|png|gif|webp|bmp|svg|ico|tiff?)$/i.test(src)) {
-                const attrs = [];
-                attrs.push(`src="${src}"`);
-                if (alt) attrs.push(`alt="${alt}"`);
-                const attrStr = attrs.join(' ');
-                r.push(`${s}<img ${attrStr} />`);
-            }
-            return; // 重要：输出后直接返回，不再执行后续元素处理
-        }
+    const src = e.attributes.src;
+    const alt = e.attributes.alt || '';
+    // 只排除 base64 图片，其他任意格式的 src 都接受
+    if (src && !src.startsWith('data:image')) {
+        const attrs = [];
+        attrs.push(`src="${src}"`);
+        if (alt) attrs.push(`alt="${alt}"`);
+        const attrStr = attrs.join(' ');
+        r.push(`${s}<img ${attrStr} />`);
+    }
+    return;
+}
           let t = n && e.tagName && SEMANTIC_TAGS.has(e.tagName);
           if (e.highlightIndex !== void 0) {
             o += 1;
