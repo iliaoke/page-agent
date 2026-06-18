@@ -7091,7 +7091,6 @@ Here are examples of good output patterns. Use them as reference but never copy 
           for (let t of e.children) u(t, o, r);
           c && (r.length === l + 1 ? r.pop() : r.push(`${s}</${e.tagName}>`));
         } else if (e.type === `text`) {
-          if (l(e)) return;
           e.parent &&
             e.parent.type === `element` &&
             e.parent.isVisible &&
