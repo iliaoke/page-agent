@@ -6714,8 +6714,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
           !e ||
           e.id === v ||
           e.dataset?.browserUseIgnore === `true` ||
-          e.dataset?.pageAgentIgnore === `true` ||
-          (e.getAttribute && e.getAttribute(`aria-hidden`) === `true`)
+          e.dataset?.pageAgentIgnore === `true` 
         )
           return null;
         if (e === document.body) {
