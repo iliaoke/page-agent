@@ -7095,7 +7095,6 @@ Here are examples of good output patterns. Use them as reference but never copy 
           e.parent &&
             e.parent.type === `element` &&
             e.parent.isVisible &&
-            e.parent.isTopElement &&
             r.push(`${s}${e.text ?? ``}`);
         }
       },
