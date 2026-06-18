@@ -7077,21 +7077,6 @@ Here are examples of good output patterns. Use them as reference but never copy 
             } else n || (c += ` `);
             ((c += ` />`), r.push(c));
           }
-          if (e.tagName === 'img') {
-            const src = e.attributes.src;
-            const alt = e.attributes.alt || '';
-            if (src && /\.(jpe?g|png|gif|webp|bmp|svg|ico|tiff?)$/i.test(src)) {
-                const attrs = [];
-                attrs.push(`src="${src}"`);
-                if (alt) attrs.push(`alt="${alt}"`);
-                const attrStr = attrs.join(' ');
-                // 输出格式：缩进 + <img 属性 /> + [图片链接: src]
-                r.push(`${s}<img ${attrStr} /> [图片链接: ${src}]`);
-            }
-            // 注意：输出后，不再继续执行后续的普通元素输出逻辑
-            // 直接返回，避免重复输出 <img /> 等
-            return;
-        }
           let c = t && e.highlightIndex === void 0,
             l = c ? r.length : -1;
           c && (r.push(`${s}<${e.tagName}>`), (o += 1));
