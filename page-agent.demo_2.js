@@ -6763,6 +6763,13 @@ Here are examples of good output patterns. Use them as reference but never copy 
           attributes: {},
           children: [],
         };
+        if (e.tagName.toLowerCase() === 'img') { 
+    let t = e.getAttributeNames?.() || [];
+    for (let n of t) {
+        let t = e.getAttribute(n);
+        r.attributes[n] = t;
+    }
+}
         if (
           k(e) ||
           e.tagName.toLowerCase() === `iframe` ||
