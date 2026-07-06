@@ -4,7 +4,14 @@
 /*$vite$:1*/`),
     document.head.appendChild(__vite_style__));
   var __defProp = Object.defineProperty,
-    __esmMin = (e, t) => () => (e && (t = e((e = 0))), t),
+    __esmMin = (e, t, n) => () => {
+      if (n) throw n[0];
+      try {
+        return (e && (t = e((e = 0))), t);
+      } catch (e) {
+        throw ((n = [e]), e);
+      }
+    },
     __exportAll = (e, t) => {
       let n = {};
       for (var r in e) __defProp(n, r, { get: e[r], enumerable: !0 });
@@ -126,7 +133,10 @@
   }
   function mergeDefs(...e) {
     let t = {};
-    for (let n of e) Object.assign(t, Object.getOwnPropertyDescriptors(n));
+    for (let n of e) {
+      let e = Object.getOwnPropertyDescriptors(n);
+      Object.assign(t, e);
+    }
     return Object.defineProperties({}, t);
   }
   function esc(e) {
@@ -4435,81 +4445,93 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       },
     };
   }
-  function modelPatch(e) {
-    let t = e.model || ``;
-    if (!t) return e;
-    let n = normalizeModelName(t);
-    return (
-      n.startsWith(`qwen`) &&
-        (debug(`Applying Qwen patch: use higher temperature for auto fixing`),
-        (e.temperature = Math.max(e.temperature || 0, 1)),
-        (e.enable_thinking = !1)),
-      n.startsWith(`claude`) &&
-        (debug(`Applying Claude patch: disable thinking`),
+  function modelPatch(e, t) {
+    let n = e.model || ``;
+    if (!n) return e;
+    let r = getProvider(t),
+      i = normalizeModelName(n);
+    if (
+      (i.startsWith(`qwen`) &&
+        (debug(`Patch Qwen: disable thinking`),
+        (e.enable_thinking = !1),
+        e.temperature === void 0 &&
+          !/max|plus/.test(i) &&
+          (debug(`Patch Qwen: raise temperature to 1.0`), (e.temperature = 1))),
+      i.startsWith(`deepseek`) &&
+        (debug(`Patch DeepSeek: disable thinking, remove tool_choice`),
         (e.thinking = { type: `disabled` }),
-        e.tool_choice === `required`
-          ? (debug(
-              `Applying Claude patch: convert tool_choice "required" to { type: "any" }`,
-            ),
-            (e.tool_choice = { type: `any` }))
-          : e.tool_choice?.function?.name &&
-            (debug(`Applying Claude patch: convert tool_choice format`),
-            (e.tool_choice = {
-              type: `tool`,
-              name: e.tool_choice.function.name,
-            })),
-        (n.startsWith(`claude-opus-4-7`) ||
-          n.startsWith(`claude-opus-47`) ||
-          n.startsWith(`claude-opus-4-8`) ||
-          n.startsWith(`claude-opus-48`)) &&
-          (debug(`Applying Claude-4.7/4.8 patch: remove temperature`),
-          delete e.temperature)),
-      n.startsWith(`grok`) &&
-        (debug(`Applying Grok patch: removing tool_choice`),
-        delete e.tool_choice,
-        debug(`Applying Grok patch: disable reasoning and thinking`),
-        (e.thinking = { type: `disabled`, effort: `minimal` }),
-        (e.reasoning = { enabled: !1, effort: `low` })),
-      n.startsWith(`gpt`) &&
-        (debug(`Applying GPT patch: set verbosity to low`),
-        (e.verbosity = `low`),
-        n.startsWith(`gpt-52`)
-          ? (debug(`Applying GPT-52 patch: disable reasoning`),
-            (e.reasoning_effort = `none`))
-          : n.startsWith(`gpt-51`)
-            ? (debug(`Applying GPT-51 patch: disable reasoning`),
-              (e.reasoning_effort = `none`))
-            : n.startsWith(`gpt-54`)
-              ? (debug(`Applying GPT-5.4 patch: remove reasoning_effort`),
-                delete e.reasoning_effort)
-              : n.startsWith(`gpt-55`)
-                ? (debug(
-                    `Applying GPT-5.4 patch: remove reasoning_effort and temperature`,
-                  ),
-                  delete e.reasoning_effort,
-                  delete e.temperature)
-                : n.startsWith(`gpt-5-mini`)
-                  ? (debug(
-                      `Applying GPT-5-mini patch: set reasoning effort to low, temperature to 1`,
-                    ),
-                    (e.reasoning_effort = `low`),
-                    (e.temperature = 1))
-                  : n.startsWith(`gpt-5`) &&
-                    (debug(`Applying GPT-5 patch: set reasoning effort to low`),
-                    (e.reasoning_effort = `low`))),
-      n.startsWith(`gemini`) &&
-        (debug(`Applying Gemini patch: set reasoning effort to minimal`),
-        (e.reasoning_effort = `minimal`)),
-      n.startsWith(`deepseek`) &&
-        (debug(`Applying DeepSeek patch: remove tool_choice`),
         delete e.tool_choice),
-      n.startsWith(`minimax`) &&
-        (debug(`Applying MiniMax patch: clamp temperature to (0, 1]`),
-        (e.temperature = Math.max(e.temperature || 0, 0.01)),
-        e.temperature > 1 && (e.temperature = 1),
-        delete e.parallel_tool_calls),
-      e
-    );
+      i.startsWith(`gpt`) &&
+        (i.startsWith(`gpt-5`) &&
+          ((e.verbosity = `low`),
+          (e.reasoning_effort = /^gpt-5(-|$)/.test(i) ? `minimal` : `none`),
+          debug(
+            `Patch GPT-5: verbosity=low, reasoning_effort=${e.reasoning_effort}`,
+          )),
+        i.includes(`chat-latest`) &&
+          (debug(`Omitting reasoning_effort and temperature for chat-latest`),
+          delete e.reasoning_effort,
+          delete e.temperature)),
+      i.startsWith(`claude`) &&
+        (/opus|sonnet|haiku/.test(i)
+          ? (debug(`Patch Claude: disable thinking`),
+            (e.thinking = { type: `disabled` }),
+            r !== `openrouter` &&
+              (e.tool_choice === `required`
+                ? (debug(
+                    `Applying Claude patch: convert tool_choice "required" to { type: "any" }`,
+                  ),
+                  (e.tool_choice = { type: `any` }))
+                : e.tool_choice?.function?.name &&
+                  (debug(`Applying Claude patch: convert tool_choice format`),
+                  (e.tool_choice = {
+                    type: `tool`,
+                    name: e.tool_choice.function.name,
+                  }))))
+          : (debug(`Patch Claude: reasoning_effort=low`),
+            (e.reasoning_effort = `low`),
+            delete e.tool_choice)),
+      i.startsWith(`gemini`) &&
+        (debug(`Patch Gemini: reasoning_effort=low`),
+        (e.reasoning_effort = `low`),
+        /^gemini-25(?!.*pro)/.test(i)
+          ? (debug(`Patch Gemini 2.5 non-Pro: reasoning_effort=none`),
+            (e.reasoning_effort = `none`))
+          : (i.startsWith(`gemini-35-flash`) ||
+              i.startsWith(`gemini-31-flash-lite`) ||
+              i.startsWith(`gemini-3-flash`)) &&
+            (debug(`Patch Gemini 3.x Flash/Lite: reasoning_effort=minimal`),
+            (e.reasoning_effort = `minimal`))),
+      i.startsWith(`glm`) &&
+        (debug(`Patch GLM: disable thinking`),
+        (e.thinking = { type: `disabled` })),
+      i.startsWith(`grok`) &&
+        (/^grok-4-?3/.test(i)
+          ? (debug(`Patch Grok 4.3: reasoning_effort=none`),
+            (e.reasoning_effort = `none`))
+          : (i.startsWith(`grok-3-mini`) || i.startsWith(`grok-code-fast`)) &&
+            (debug(`Patch Grok mini/code: reasoning_effort=low`),
+            (e.reasoning_effort = `low`))),
+      i.startsWith(`kimi`) &&
+        (i.includes(`code`) ||
+          (debug(`Patch Kimi: disable thinking`),
+          (e.thinking = { type: `disabled` }))),
+      i.startsWith(`minimax`) &&
+        (debug(`Patch MiniMax: remove parallel_tool_calls`),
+        delete e.parallel_tool_calls,
+        i.includes(`m3`) &&
+          (debug(`Patch MiniMax: disable thinking`),
+          (e.thinking = { type: `disabled` }))),
+      r === `openrouter`)
+    ) {
+      let t = e.reasoning_effort;
+      e.thinking?.type === `disabled` ||
+      e.enable_thinking === !1 ||
+      t === `none`
+        ? (e.reasoning = { enabled: !1 })
+        : t && (e.reasoning = { enabled: !0, effort: t });
+    }
+    return e;
   }
   function normalizeModelName(e) {
     let t = e.toLowerCase();
@@ -4519,6 +4541,14 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       (t = t.replace(/\./g, ``)),
       t
     );
+  }
+  function getProvider(e) {
+    if (e)
+      try {
+        return new URL(e).hostname === `openrouter.ai` ? `openrouter` : void 0;
+      } catch {
+        return;
+      }
   }
   var OpenAIClient = class {
       config;
@@ -4535,13 +4565,14 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           (a = { type: `function`, function: { name: r.toolChoiceName } });
         let o = {
           model: this.config.model,
-          temperature: this.config.temperature,
           messages: e,
           tools: i,
           parallel_tool_calls: !1,
           tool_choice: a,
         };
-        modelPatch(o);
+        (this.config.temperature !== void 0 &&
+          (o.temperature = this.config.temperature),
+          modelPatch(o, this.config.baseURL));
         let s;
         try {
           s = this.config.transformRequestBody(o);
@@ -4732,48 +4763,31 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         };
       }
     },
-    DEFAULT_TEMPERATURE = 0.7;
-  function parseLLMConfig(e) {
-    if (!e.baseURL || !e.model)
-      throw Error(
-        `[PageAgent] LLM configuration required. Please provide: baseURL, model. See: https://alibaba.github.io/page-agent/docs/features/models`,
-      );
-    return {
-      baseURL: e.baseURL,
-      model: e.model,
-      apiKey: e.apiKey || ``,
-      temperature: e.temperature ?? 0.7,
-      maxRetries: e.maxRetries ?? 2,
-      transformRequestBody: e.transformRequestBody ?? ((e) => e),
-      disableNamedToolChoice: e.disableNamedToolChoice ?? !1,
-      customFetch: (e.customFetch ?? fetch).bind(globalThis),
+    LLM = class extends EventTarget {
+      config;
+      client;
+      constructor(e) {
+        (super(),
+          (this.config = parseLLMConfig(e)),
+          (this.client = new OpenAIClient(this.config)));
+      }
+      async invoke(e, t, n, r) {
+        return await withRetry(async () => this.client.invoke(e, t, n, r), {
+          maxRetries: this.config.maxRetries,
+          onRetry: (e, t) => {
+            this.dispatchEvent(
+              new CustomEvent(`retry`, {
+                detail: {
+                  attempt: e,
+                  maxAttempts: this.config.maxRetries,
+                  lastError: t,
+                },
+              }),
+            );
+          },
+        });
+      }
     };
-  }
-  var LLM = class extends EventTarget {
-    config;
-    client;
-    constructor(e) {
-      (super(),
-        (this.config = parseLLMConfig(e)),
-        (this.client = new OpenAIClient(this.config)));
-    }
-    async invoke(e, t, n, r) {
-      return await withRetry(async () => this.client.invoke(e, t, n, r), {
-        maxRetries: this.config.maxRetries,
-        onRetry: (e, t) => {
-          this.dispatchEvent(
-            new CustomEvent(`retry`, {
-              detail: {
-                attempt: e,
-                maxAttempts: this.config.maxRetries,
-                lastError: t,
-              },
-            }),
-          );
-        },
-      });
-    }
-  };
   async function withRetry(e, t) {
     let n = 0;
     for (;;)
@@ -4790,6 +4804,28 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           t.onRetry(n, e),
           await new Promise((e) => setTimeout(e, 100)));
       }
+  }
+  function parseLLMConfig(e) {
+    if (!e.baseURL || !e.model)
+      throw Error(
+        `[PageAgent] LLM configuration required. Please provide: baseURL, model. See: https://alibaba.github.io/page-agent/docs/features/models`,
+      );
+    return (
+      e.temperature !== void 0 &&
+        console.warn(
+          `[PageAgent] LLMConfig.temperature is deprecated and will be removed in a future version. Use transformRequestBody to set it only for models you have verified accept it.`,
+        ),
+      {
+        baseURL: e.baseURL,
+        model: e.model,
+        apiKey: e.apiKey || ``,
+        temperature: e.temperature,
+        maxRetries: e.maxRetries ?? 2,
+        transformRequestBody: e.transformRequestBody ?? ((e) => e),
+        disableNamedToolChoice: e.disableNamedToolChoice ?? !1,
+        customFetch: (e.customFetch ?? fetch).bind(globalThis),
+      }
+    );
   }
   var system_prompt_default = `You are an AI agent designed to operate in an iterative loop to automate browser tasks. Your ultimate goal is accomplishing the task provided in <user_request>.
 
@@ -4830,7 +4866,7 @@ and system messages wrapped in <sys> tag.
 <user_request>
 USER REQUEST: This is your ultimate objective and always remains visible.
 - This has the highest priority. Make the user happy.
-- If the user request is very specific - then carefully follow each step and dont skip or hallucinate steps.
+- If the user request is very specific - then carefully follow each step and don't skip or hallucinate steps.
 - If the task is open ended you can plan yourself how to get it done.
 </user_request>
 
@@ -6777,7 +6813,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
             (e.type === `checkbox` || e.type === `radio`) &&
             (r.attributes.checked = e.checked ? `true` : `false`);
         }
-        if (e.tagName.toLowerCase() === 'img') {
+            if (e.tagName.toLowerCase() === 'img') {
         let t = e.getAttributeNames?.() || [];
         for (let n of t) {
             let t = e.getAttribute(n);
@@ -7018,7 +7054,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
         let o = t,
           s = `	`.repeat(t);
         if (e.type === `element`) {
-                     if (e.tagName === 'img') {
+                    if (e.tagName === 'img') {
     const src = e.attributes.src;
     const alt = e.attributes.alt || '';
     // 只排除 base64 图片，其他任意格式的 src 都接受
