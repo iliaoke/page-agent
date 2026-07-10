@@ -4462,16 +4462,19 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         (e.thinking = { type: `disabled` }),
         delete e.tool_choice),
       i.startsWith(`gpt`) &&
-        (i.startsWith(`gpt-5`) &&
-          ((e.verbosity = `low`),
-          (e.reasoning_effort = /^gpt-5(-|$)/.test(i) ? `minimal` : `none`),
-          debug(
-            `Patch GPT-5: verbosity=low, reasoning_effort=${e.reasoning_effort}`,
-          )),
-        i.includes(`chat-latest`) &&
-          (debug(`Omitting reasoning_effort and temperature for chat-latest`),
-          delete e.reasoning_effort,
-          delete e.temperature)),
+        (i.startsWith(`gpt-5`) && (e.verbosity = `low`),
+        i.includes(`chat-latest`)
+          ? (debug(`Patch chat-latest: omit reasoning_effort and temperature`),
+            delete e.reasoning_effort,
+            delete e.temperature)
+          : /^gpt-5[12](-|$)/.test(i)
+            ? (debug(`Patch GPT-5.1/5.2: reasoning_effort=none`),
+              (e.reasoning_effort = `none`))
+            : /^gpt-5(-|$)/.test(i)
+              ? (debug(`Patch GPT-5: reasoning_effort=minimal`),
+                (e.reasoning_effort = `minimal`))
+              : (debug(`Patch GPT: omit reasoning_effort`),
+                delete e.reasoning_effort)),
       i.startsWith(`claude`) &&
         (/opus|sonnet|haiku/.test(i)
           ? (debug(`Patch Claude: disable thinking`),
@@ -4505,6 +4508,10 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       i.startsWith(`glm`) &&
         (debug(`Patch GLM: disable thinking`),
         (e.thinking = { type: `disabled` })),
+      i.startsWith(`hy`) &&
+        (debug(`Patch Hunyuan: disable thinking, reasoning_effort=low`),
+        (e.thinking = { type: `disabled` }),
+        (e.reasoning_effort = `low`)),
       i.startsWith(`grok`) &&
         (/^grok-4-?3/.test(i)
           ? (debug(`Patch Grok 4.3: reasoning_effort=none`),
@@ -6813,7 +6820,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
             (e.type === `checkbox` || e.type === `radio`) &&
             (r.attributes.checked = e.checked ? `true` : `false`);
         }
-            if (e.tagName.toLowerCase() === 'img') {
+         if (e.tagName.toLowerCase() === 'img') {
         let t = e.getAttributeNames?.() || [];
         for (let n of t) {
             let t = e.getAttribute(n);
@@ -7054,7 +7061,7 @@ Here are examples of good output patterns. Use them as reference but never copy 
         let o = t,
           s = `	`.repeat(t);
         if (e.type === `element`) {
-                    if (e.tagName === 'img') {
+           if (e.tagName === 'img') {
     const src = e.attributes.src;
     const alt = e.attributes.alt || '';
     // 只排除 base64 图片，其他任意格式的 src 都接受
